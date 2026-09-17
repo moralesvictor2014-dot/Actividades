@@ -88,7 +88,7 @@
                             </span>
                             Mis Actividades Asignadas
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1 ml-11">Marque las etapas completadas para actualizar el progreso en el sistema</p>
+                        <p class="text-xs text-slate-500 mt-1 ml-11">Marque cada logro/fase completada (Cada una suma un 20%)</p>
                     </div>
                     <div>
                         <span id="total-actividades" class="bg-emerald-50 text-emerald-800 text-xs px-3 py-1.5 rounded-xl font-semibold border border-emerald-200">Actividades: 0</span>
@@ -106,7 +106,7 @@
                         <thead>
                             <tr class="bg-emerald-950/95 border-b border-emerald-950 text-xs font-semibold text-emerald-50/90 uppercase tracking-wider">
                                 <th class="p-4 rounded-tl-xl">Actividad / Prioridad</th>
-                                <th class="p-4">Valoración por fase (16.67% c/u)</th>
+                                <th class="p-4">Fases de Avance (20% c/u)</th>
                                 <th class="p-4 text-center rounded-tr-xl">Progreso General</th>
                             </tr>
                         </thead>
@@ -130,14 +130,13 @@
     <script>
         const DB_URL = "https://ropc-70fcc-default-rtdb.firebaseio.com/actividades_operaciones";
 
-        // Las 6 etapas fijas de mantenimiento
+        // Las 5 fases fijas de avance (20% cada una)
         const ETAPAS = [
             "Fase 1",
             "Fase 2",
             "Fase 3",
             "Fase 4",
-            "Fase 5",
-            "Listo"
+            "Fase 5"
         ];
 
         let operadorActual = null;
@@ -195,7 +194,6 @@
 
             setLoading(true);
             try {
-                // Obtener datos de Firebase
                 const response = await fetch(`${DB_URL}.json`);
                 if (!response.ok) throw new Error("Error al conectar con la base de datos");
                 const data = await response.json() || {};
@@ -203,7 +201,6 @@
                 const operadores = data.operadores || {};
                 const actividades = data.actividades || {};
 
-                // Buscar el ID del operador que coincida con la C.I.
                 let idOperadorEncontrado = null;
                 Object.keys(operadores).forEach(opId => {
                     const op = operadores[opId];
@@ -229,13 +226,11 @@
                     return;
                 }
 
-                // Mostrar Info del Operador
                 infoNombre.textContent = `${operadorActual.nombre} ${operadorActual.apellido}`;
                 infoCargo.textContent = operadorActual.cargo || "Sin Cargo";
                 infoCi.textContent = operadorActual.cedula;
                 cardOperadorInfo.classList.remove('hidden');
 
-                // Filtrar actividades donde este operador esté asignado
                 actividadesAsignadas = {};
                 Object.keys(actividades).forEach(actId => {
                     const act = actividades[actId];
@@ -290,16 +285,13 @@
                 const meta = Number(act.meta) || 100;
                 const progresoActual = Number(act.progreso) || 0;
 
-                // Si no existe arreglo de etapas completadas en Firebase, inicializar según el progreso
                 let etapasCompletadas = act.etapasCompletadas || [];
                 if (!Array.isArray(etapasCompletadas) && progresoActual > 0) {
-                    // Estimar cuántas etapas se marcaron según el porcentaje actual
                     const fraccion = Math.min(Math.round((progresoActual / meta) * ETAPAS.length), ETAPAS.length);
                     etapasCompletadas = ETAPAS.slice(0, fraccion);
                 }
 
-                // Generar casillas de verificación (Checkboxes)
-                const checkboxesHTML = ETAPAS.map((etapa, idx) => {
+                const checkboxesHTML = ETAPAS.map((etapa) => {
                     const estaMarcada = etapasCompletadas.includes(etapa);
                     return `
                         <label class="inline-flex items-center bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 cursor-pointer hover:bg-emerald-50 select-none mr-1.5 mb-1.5 transition-colors">
@@ -337,7 +329,7 @@
                         <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
                             <div class="${porcentaje === 100 ? 'bg-emerald-500' : 'bg-emerald-700'} h-2.5 rounded-full transition-all duration-300" style="width: ${porcentaje}%"></div>
                         </div>
-                        <span class="text-[10px] text-slate-400 mt-1 block">${etapasCompletadas.length} de ${ETAPAS.length} etapas completadas</span>
+                        <span class="text-[10px] text-slate-400 mt-1 block">${etapasCompletadas.length} de ${ETAPAS.length} fases completadas</span>
                     </td>
                 `;
                 tablaBody.appendChild(tr);
@@ -351,7 +343,6 @@
 
             let etapasCompletadas = act.etapasCompletadas || [];
             
-            // Si el objeto en Firebase no tenía la propiedad guardada aun, estimamos el estado actual
             if (!Array.isArray(etapasCompletadas)) {
                 const meta = Number(act.meta) || 100;
                 const fraccion = Math.min(Math.round(((act.progreso || 0) / meta) * ETAPAS.length), ETAPAS.length);
@@ -369,13 +360,11 @@
             const fraccionProgreso = etapasCompletadas.length / ETAPAS.length;
             const nuevoProgreso = Math.round(fraccionProgreso * meta);
 
-            // Actualizar localmente para respuesta instantánea de la UI
             act.etapasCompletadas = etapasCompletadas;
             act.progreso = nuevoProgreso;
 
             setLoading(true);
             try {
-                // Actualizar simultáneamente 'progreso' y 'etapasCompletadas' en Firebase
                 const updates = {
                     [`${DB_URL}/actividades/${actividadId}/progreso.json`]: nuevoProgreso,
                     [`${DB_URL}/actividades/${actividadId}/etapasCompletadas.json`]: etapasCompletadas
@@ -391,7 +380,7 @@
 
                 await Promise.all(promesas);
 
-                showToast(`Etapa "${nombreEtapa}" ${estaMarcada ? 'completada' : 'desmarcada'}. Sincronizado con Main.`, "success");
+                showToast(`"${nombreEtapa}" ${estaMarcada ? 'completada (+20%)' : 'desmarcada'}. Sincronizado.`, "success");
                 renderTablaActividades();
             } catch (error) {
                 console.error(error);
