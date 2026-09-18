@@ -12,20 +12,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+
+        /* ===== AJUSTES RESPONSIVE ===== */
+        @media (max-width: 1023px) {
+            /* La tabla se convierte en tarjetas apiladas */
+            table.responsive-table,
+            table.responsive-table thead,
+            table.responsive-table tbody,
+            table.responsive-table th,
+            table.responsive-table td,
+            table.responsive-table tr { display: block; }
+
+            table.responsive-table thead { display: none; }
+
+            table.responsive-table tbody tr {
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                margin-bottom: 14px;
+                padding: 4px;
+                background: #ffffff;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            }
+            table.responsive-table tbody td { border: none; padding: 10px 14px; min-width: 0 !important; max-width: none !important; }
+            /* Etiquetas de columna en modo móvil */
+            table.responsive-table tbody td[data-label]::before {
+                content: attr(data-label);
+                display: block;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #059669;
+                margin-bottom: 6px;
+            }
+            table.responsive-table tbody td:last-child { border-bottom: none; }
+        }
+
+        @media (max-width: 640px) {
+            /* Cabecera: permite que el badge pase a segunda línea si no cabe */
+            header .h-16 { height: auto; min-height: 4rem; padding-top: 0.5rem; padding-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
+            /* Checkboxes un poco más grandes para táctil */
+            .responsive-table input[type="checkbox"] { width: 1.1rem; height: 1.1rem; }
+            /* Título del sistema más compacto en móvil */
+            #header-title { font-size: 0.95rem; }
+            /* Los toasts no invadan toda la pantalla */
+            #toast-container { left: 1rem; right: 1rem; }
+            #toast-container > div { max-width: 100%; }
+        }
+
     </style>
+<base target="_blank">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
     <!-- BARRA DE NAVEGACIÓN SUPERIOR -->
     <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between flex-wrap gap-y-2">
             <div class="flex items-center space-x-3">
                 <div class="bg-emerald-800 p-2.5 rounded-xl text-white shadow-lg shadow-emerald-800/30">
                     <i class="fa-solid fa-list-check text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg tracking-wide text-emerald-950">OPC-SYSTEM</h1>
-                    <p class="text-xs text-slate-500">Módulo de Operadores y Progreso</p>
+                    <h1 id="header-title" class="font-bold text-base sm:text-lg tracking-wide text-emerald-950">OPC-SYSTEM</h1>
+                    <p class="text-[11px] sm:text-xs text-slate-500">Módulo de Operadores y Progreso</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
@@ -102,7 +151,7 @@
                         <span class="text-xs text-slate-500 font-semibold">Cargando actividades desde Firebase...</span>
                     </div>
 
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse responsive-table">
                         <thead>
                             <tr class="bg-emerald-950/95 border-b border-emerald-950 text-xs font-semibold text-emerald-50/90 uppercase tracking-wider">
                                 <th class="p-4 rounded-tl-xl">Actividad / Prioridad</th>
@@ -125,7 +174,7 @@
     </main>
 
     <!-- NOTIFICACIONES TOAST -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-5 right-5 left-auto z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-auto"></div>
 
     <script>
         const DB_URL = "https://ropc-70fcc-default-rtdb.firebaseio.com/actividades_operaciones";
@@ -308,7 +357,7 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-emerald-50/30 transition-colors";
                 tr.innerHTML = `
-                    <td class="p-4 align-top min-w-[200px]">
+                    <td class="p-4 align-top min-w-[200px]" data-label="Actividad / Prioridad">
                         <div class="font-semibold text-slate-800 text-sm">${act.descripcion}</div>
                         <div class="mt-2 flex flex-wrap gap-1 items-center">
                             <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded ${act.prioridad === 'S' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}">
@@ -317,12 +366,12 @@
                             ${act.fechaLimite ? `<span class="text-[11px] text-slate-400 ml-1"><i class="fa-solid fa-calendar text-[10px] mr-1"></i>${act.fechaLimite}</span>` : ''}
                         </div>
                     </td>
-                    <td class="p-4 align-top max-w-xs">
+                    <td class="p-4 align-top max-w-xs" data-label="Fases de Avance">
                         <div class="flex flex-wrap">
                             ${checkboxesHTML}
                         </div>
                     </td>
-                    <td class="p-4 align-top text-center min-w-[140px]">
+                    <td class="p-4 align-top text-center min-w-[140px]" data-label="Progreso General">
                         <div class="text-xs font-bold ${porcentaje === 100 ? 'text-emerald-600' : 'text-slate-700'} mb-1.5">
                             ${progresoActual} / ${meta} <span class="text-emerald-700">(${porcentaje}%)</span>
                         </div>
